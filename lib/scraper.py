@@ -14,24 +14,26 @@ SEARCH_URL = BASE_URL + "pesquisaAvancada.aspx"
 PAGE_SIZE = 200
 WAIT_TIME = 15
 
-def setup_search(driver, MONTH = 1, YEAR = 2026):
+def setup_search(driver, s_m = 1, s_y = 2026, e_m = None, e_y = None):
     """Open ALEPE search page, select Decreto, set date range, and click search."""
     driver.get(SEARCH_URL)
     driver.find_element(By.ID, "cblTipoNorma_3").click()
     driver.find_element(By.ID, "li-publicacao").click()
 
-    first_day = 1
-    last_day = calendar.monthrange(YEAR, MONTH)[1]
+    if e_m == None:
+        e_m, e_y = s_m, s_y
+
+    last_day = calendar.monthrange(e_y, e_m)[1]
 
     start_input = WebDriverWait(driver, WAIT_TIME).until(
         EC.presence_of_element_located((By.ID, "tbxDataInicialPublicacao"))
     )
     end_input = driver.find_element(By.ID, "tbxDataFinalPublicacao")
 
-    start_date = f"{first_day:02}/{MONTH:02}/{YEAR}"
-    end_date = f"{last_day:02}/{MONTH:02}/{YEAR}"
+    start_date = f"01/{s_m:02}/{s_y}"
+    end_date = f"{last_day:02}/{e_m:02}/{e_y}"
 
-    print(f"Buscando decretos no intervalo de\n{start_date}\n{end_date}")
+    print(f"🔎 Buscando decretos no intervalo de:\n   {start_date} até {end_date}")
 
     start_input.clear()
     start_input.send_keys(start_date)
@@ -40,6 +42,7 @@ def setup_search(driver, MONTH = 1, YEAR = 2026):
     end_input.send_keys(end_date)
 
     driver.find_element(By.ID, "btnPesquisar").click()
+    print("⚡ Pesquisa iniciada... aguardando resultados.")
 
 def configure_page_size(driver):
     qty_label = WebDriverWait(driver, WAIT_TIME).until(
@@ -54,7 +57,7 @@ def configure_page_size(driver):
         select.select_by_value(str(PAGE_SIZE))
         wait_table_loaded(driver, WAIT_TIME)
 
-    print(f"Resultados: {total_results}, Páginas: {total_pages}")
+    print(f"📊 Resultados encontrados: {total_results}, Páginas a percorrer: {total_pages}")
     return total_pages
 
 def extract_page_data(driver, buffer):
@@ -78,7 +81,17 @@ def scrape_all_pages(driver, total_pages):
     current_page = 0
     start_time_total = time.time()
 
-    page_iter = tqdm(range(1, total_pages + 1), desc="Coletando páginas", unit="page")
+    page_iter = tqdm(
+        range(1, total_pages + 1),
+        desc="📄 Coletando páginas",
+        unit="página",
+        bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
+        colour="cyan",
+        ncols=100,
+        dynamic_ncols=True
+    )
+
+    print("⏳ Iniciando coleta de decretos...")
 
     while current_page < total_pages:
         for _ in range(5):
@@ -105,5 +118,5 @@ def scrape_all_pages(driver, total_pages):
             break
 
     page_iter.close()
-    print(f"Scraping completed in {time.time() - start_time_total:.2f}s")
+    print(f"✅ Coleta de decretos concluída em {time.time() - start_time_total:.2f}s")
     return all_data

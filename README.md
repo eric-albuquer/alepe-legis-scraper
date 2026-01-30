@@ -98,6 +98,7 @@ alepe-legis-scraper/
 │   └─ programas.xlsx
 │
 ├─ main.py             # main script
+├─ chromedriver.exe
 ├─ requirements.txt    # Python dependencies
 ├─ README.md
 └─ .gitignore

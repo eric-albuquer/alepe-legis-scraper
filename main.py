@@ -4,10 +4,9 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from lib.scraper import setup_search, configure_page_size, scrape_all_pages
 from lib.filter import filter_programs
-from lib.utils import save_to_excel, save_to_json, save_to_csv
+from lib.utils import save_to_excel, save_to_json, save_to_csv, get_month_input, get_year_input
 from lib.extract import populate_cnpjs_parallel
 import time
-from datetime import date
 import os
 
 def create_driver():
@@ -46,61 +45,66 @@ def create_driver():
     return driver
 
 def main():
-    MONTH = 0
-    while True:
-        MONTH = int(input("Mês: "))
-        if MONTH >= 1 and MONTH <= 12:
-            break
-        print("Mês inválido")
+    print("\n=== Alepe Legis Scraper ===")
+    print("Autor: Eric Gonçalves Albuquerque")
+    print("GitHub: https://github.com/eric-albuquer/alepe-legis-scraper\n")
 
-    YEAR = 0
-    while True:
-        YEAR = int(input("Ano: "))
-        if YEAR > 0:
-            break
-        print("Ano inválido")
+    start_month = get_month_input("➡️  Digite o Mês de início (1-12): ")
+    start_year = get_year_input("➡️  Digite o Ano de início (ex: 2026): ")
 
-    if YEAR < 100:
-        if YEAR <= date.today().year:
-            YEAR += 2000
-        else:
-            YEAR += 1900
+    only_start = input("📌  Deseja pesquisar apenas este mês? (aperte Enter para não, qualquer tecla para sim): ")
+
+    end_month, end_year = None, None
+    if only_start:
+        end_month = get_month_input("➡️  Digite o Mês de fim (1-12): ")
+        end_year = get_year_input("➡️  Digite o Ano de fim (ex: 2026): ")
+
+    print("\n🔎  Iniciando pesquisa...\n")
 
     driver = create_driver()
 
     try:
         start_time = time.time()
         t = start_time
-        print("Inciando pesquisa...")
-        setup_search(driver, MONTH, YEAR)
+
+        print("🔎 Configurando parâmetros de pesquisa...")
+        setup_search(driver, start_month, start_year, end_month, end_year)
         
         total_pages = configure_page_size(driver)
-        print(f"Parâmetros de pesquisa concluídos em {time.time() - t:.2f}s\n")
+        print(f"✅ Parâmetros de pesquisa configurados em {time.time() - t:.2f}s\n")
 
         t = time.time()
+        print(f"📄 Coletando decretos de {total_pages} página(s)...")
         decrees = scrape_all_pages(driver, total_pages)
-        print(f"Coleta de decretos concluída em {time.time() - t:.2f}s\n")
+        print(f"✅ Coleta de decretos concluída em {time.time() - t:.2f}s\n")
 
         result = filter_programs(decrees)
-        print("Total de decretos encontrados:", len(decrees))
-        print("Total de decretos PRODEPE/PROIND:", len(result), "\n")
+        print(f"📊 Total de decretos encontrados: {len(decrees)}")
+        print(f"💼 Total de decretos PRODEPE/PROIND: {len(result)}\n")
 
         t = time.time()
+        print("🔍 Extraindo CNPJs das empresas associadas aos decretos...")
         result = populate_cnpjs_parallel(result)
-        print(f"Extração de CNPJ concluída em {time.time() - t:.2f}s\n")
+        print(f"✅ Extração de CNPJs concluída em {time.time() - t:.2f}s\n")
 
         t = time.time()
         os.makedirs("./output", exist_ok=True)
+        print("💾 Salvando resultados nos formatos JSON, XLSX e CSV...")
         save_to_excel(result, "./output/programas.xlsx")
         save_to_json(result, "./output/programas.json")
         save_to_csv(result, "./output/programas.csv")
-        print(f"Gravação concluida em {time.time() - t:.2f}s\n")
+        print(f"✅ Gravação concluída em {time.time() - t:.2f}s\n")
 
-        print(f"Tempo total de execução {time.time() - start_time:.2f}s")
-        print("Terminou!")
+        print(f"⏱️ Tempo total de execução: {time.time() - start_time:.2f}s")
+        print("🎉 Processo finalizado com sucesso!")
 
     finally:
         driver.quit()
+        input("Pressione ENTER para encerrar o programa")
 
 if __name__ == "__main__":
+    import multiprocessing
+    multiprocessing.freeze_support()
+    multiprocessing.set_start_method("spawn")
+
     main()

@@ -4,6 +4,7 @@ import re
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 import pandas as pd
+from datetime import date
 
 NUMBER_REGEX = re.compile(r"\d[\d\.]*")
 
@@ -67,3 +68,29 @@ def save_to_csv(data, filename="decrees.csv"):
     df = pd.DataFrame(rows, columns=["Número", "Data Publicação", "Programa", "Tipo", "ConcOrig", "CNPJ", "Empresa", "Link", "Ementa"])
     df.to_csv(filename, index=False, encoding="utf-8-sig")
     print(f"Arquivo CSV salvo em {filename}")
+
+def get_year_input(text):
+    YEAR = 0
+    while True:
+        YEAR = int(input(text))
+        if YEAR > 0:
+            break
+        print("Ano inválido")
+
+    if YEAR < 100:
+        if YEAR <= date.today().year:
+            YEAR += 2000
+        else:
+            YEAR += 1900
+
+    return YEAR
+
+def get_month_input(text):
+    MONTH = 0
+    while True:
+        MONTH = int(input(text))
+        if MONTH >= 1 and MONTH <= 12:
+            break
+        print("Mês inválido")
+
+    return MONTH

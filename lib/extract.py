@@ -46,7 +46,16 @@ def populate_cnpjs_parallel(decrees, num_workers=None):
     updated_decrees = []
 
     with Pool(num_workers) as pool:
-        for decree in tqdm(pool.imap_unordered(extract_cnpj, decrees), total=len(decrees), desc="Extraindo CNPJ"):
+        for decree in tqdm(
+            pool.imap_unordered(extract_cnpj, decrees),
+            total=len(decrees),
+            desc="📝 Extraindo CNPJs",
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
+            colour="green",
+            ncols=100,
+            unit="decreto",
+            dynamic_ncols=True,
+        ):
             updated_decrees.append(decree)
 
     return updated_decrees
