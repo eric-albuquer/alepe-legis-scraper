@@ -81,13 +81,27 @@ Outputs will be saved in the output/ folder as:
 
 ## 🔹 Folder Structure
 
+```text
 alepe-legis-scraper/
 │
-├─ scraper/            # main scraping code
+├─ lib/                # scraping source code
+│   ├─ __init__.py
+│   ├─ extract.py
+│   ├─ filter.py
+│   ├─ models.py
+│   ├─ scraper.py
+│   └─ utils.py
+│
 ├─ output/             # automatically generated output files
+│   ├─ programas.csv
+│   ├─ programas.json
+│   └─ programas.xlsx
+│
+├─ main.py             # main script
 ├─ requirements.txt    # Python dependencies
 ├─ README.md
 └─ .gitignore
+```
 
 ## 🔹 Notes
 
