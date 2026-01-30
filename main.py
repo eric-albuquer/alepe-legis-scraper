@@ -1,6 +1,7 @@
 # main.py
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from lib.scraper import setup_search, configure_page_size, scrape_all_pages
 from lib.filter import filter_programs
 from lib.utils import save_to_excel, save_to_json, save_to_csv
@@ -36,7 +37,9 @@ def create_driver():
 
     chrome_options.page_load_strategy = "eager"
 
-    driver = webdriver.Chrome(options=chrome_options)
+    service = Service(executable_path="chromedriver.exe")
+
+    driver = webdriver.Chrome(options=chrome_options, service=service)
 
     driver.implicitly_wait(0)
 
