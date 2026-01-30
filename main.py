@@ -4,7 +4,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from lib.scraper import setup_search, configure_page_size, scrape_all_pages
 from lib.filter import filter_programs
-from lib.utils import save_to_excel, save_to_json, save_to_csv, get_month_input, get_year_input
+from lib.utils import save_to_excel, save_to_json, save_to_csv, get_month_input, get_year_input, sort_decrees
 from lib.extract import populate_cnpjs_parallel
 import time
 import os
@@ -88,6 +88,8 @@ def main():
         print(f"✅ Extração de CNPJs concluída em {time.time() - t:.2f}s\n")
 
         t = time.time()
+        sort_decrees(result)
+
         os.makedirs("./output", exist_ok=True)
         print("💾 Salvando resultados nos formatos JSON, XLSX e CSV...")
         save_to_excel(result, "./output/programas.xlsx")
@@ -106,5 +108,11 @@ if __name__ == "__main__":
     import multiprocessing
     multiprocessing.freeze_support()
     multiprocessing.set_start_method("spawn")
+
+    import sys
+    import io
+
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
     main()

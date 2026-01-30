@@ -52,7 +52,7 @@ def populate_cnpjs_parallel(decrees, num_workers=None):
             desc="📝 Extraindo CNPJs",
             bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
             colour="green",
-            ncols=100,
+            ncols=120,
             unit="decreto",
             dynamic_ncols=True,
         ):

@@ -42,6 +42,9 @@ def find_page_link(driver, page_number):
             return link
     return None
 
+def sort_decrees(decrees):
+    decrees.sort(key=lambda x: x.number)
+
 def save_to_json(decrees, filename="decrees.json"):
     """Save a list of Decree objects to a JSON file."""
     data = [d.to_dict() for d in decrees]
@@ -69,28 +72,39 @@ def save_to_csv(data, filename="decrees.csv"):
     df.to_csv(filename, index=False, encoding="utf-8-sig")
     print(f"Arquivo CSV salvo em {filename}")
 
-def get_year_input(text):
-    YEAR = 0
+def get_year_input(prompt="Ano: "):
+    """Solicita ao usuário um ano válido. Suporta anos com 2 ou 4 dígitos."""
     while True:
-        YEAR = int(input(text))
-        if YEAR > 0:
-            break
-        print("Ano inválido")
+        try:
+            year = int(input(prompt))
+        except ValueError:
+            print("Entrada inválida! Digite um número para o ano.")
+            continue
 
-    if YEAR < 100:
-        if YEAR <= date.today().year:
-            YEAR += 2000
-        else:
-            YEAR += 1900
+        if year <= 0:
+            print("Ano inválido! Deve ser maior que zero.")
+            continue
 
-    return YEAR
+        # Converte anos com 2 dígitos para 4 dígitos
+        if year < 100:
+            current_year = date.today().year
+            if year <= current_year % 100:
+                year += 2000
+            else:
+                year += 1900
 
-def get_month_input(text):
-    MONTH = 0
+        return year
+
+def get_month_input(prompt="Mês: "):
+    """Solicita ao usuário um mês válido (1 a 12)."""
     while True:
-        MONTH = int(input(text))
-        if MONTH >= 1 and MONTH <= 12:
-            break
-        print("Mês inválido")
+        try:
+            month = int(input(prompt))
+        except ValueError:
+            print("Entrada inválida! Digite um número de 1 a 12.")
+            continue
 
-    return MONTH
+        if 1 <= month <= 12:
+            return month
+
+        print("Mês inválido! Deve ser entre 1 e 12.")

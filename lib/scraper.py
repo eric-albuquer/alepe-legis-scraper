@@ -57,7 +57,7 @@ def configure_page_size(driver):
         select.select_by_value(str(PAGE_SIZE))
         wait_table_loaded(driver, WAIT_TIME)
 
-    print(f"📊 Resultados encontrados: {total_results}, Páginas a percorrer: {total_pages}")
+    print(f"📊 Decretos encontrados: {total_results}, Páginas a percorrer: {total_pages}")
     return total_pages
 
 def extract_page_data(driver, buffer):
@@ -81,17 +81,17 @@ def scrape_all_pages(driver, total_pages):
     current_page = 0
     start_time_total = time.time()
 
+    print("⏳ Iniciando coleta de decretos...")
+
     page_iter = tqdm(
         range(1, total_pages + 1),
         desc="📄 Coletando páginas",
         unit="página",
         bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}{postfix}]",
         colour="cyan",
-        ncols=100,
+        ncols=120,
         dynamic_ncols=True
     )
-
-    print("⏳ Iniciando coleta de decretos...")
 
     while current_page < total_pages:
         for _ in range(5):
