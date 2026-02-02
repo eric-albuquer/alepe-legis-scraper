@@ -3,7 +3,7 @@
 class Decree:
     """Model representing a decree extracted from ALEPE."""
 
-    def __init__(self, number, publish_date, link, summary):
+    def __init__(self, number = None, publish_date = None, link = None, summary = None, id = None):
         self.number = number
         self.publish_date = publish_date
         self.cnpj = None
@@ -13,13 +13,14 @@ class Decree:
         self.program = None
         self.type = None
         self.origin_decree = None
+        self.id = id
 
     def __str__(self):
         return f"{self.number},{self.publish_date},{self.program}"
 
     def to_row(self):
         origin_decree_text = ";".join(map(str, self.origin_decree))
-        return [self.number, self.publish_date, self.program, self.type, origin_decree_text, self.cnpj, self.company, self.link, self.summary]
+        return [self.number, self.publish_date, self.program, self.type, origin_decree_text, self.cnpj, self.company, self.link, self.id, self.summary]
 
     def to_dict(self):
         """Return a dict representation for JSON."""
@@ -32,5 +33,6 @@ class Decree:
             "cnpj": self.cnpj,
             "company": self.company,
             "link": self.link,
+            "id": self.id,
             "summary": self.summary
         }

@@ -3,11 +3,12 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from lib.scraper import setup_search, configure_page_size, scrape_all_pages
-from lib.filter import filter_programs
-from lib.utils import save_to_excel, save_to_json, save_to_csv, get_month_input, get_year_input, sort_decrees
+from lib.filter import filter_programs, filter_not_find
+from lib.utils import *
 from lib.extract import populate_cnpjs_parallel
 import time
 import os
+from colorama import init
 
 def create_driver():
     chrome_options = Options()
@@ -45,70 +46,82 @@ def create_driver():
     return driver
 
 def main():
-    print("\n=== Alepe Legis Scraper ===")
-    print("Autor: Eric Gonçalves Albuquerque")
-    print("GitHub: https://github.com/eric-albuquer/alepe-legis-scraper\n")
+    init()
 
-    start_month = get_month_input("➡️  Digite o Mês de início (1-12): ")
-    start_year = get_year_input("➡️  Digite o Ano de início (ex: 2026): ")
+    print(TITLE + "\n========================================")
+    print("🚀  ALEPE LEGIS SCRAPER")
+    print("========================================")
+    print(INFO + "Autor: Eric Gonçalves Albuquerque")
+    print(INFO + "GitHub: https://github.com/eric-albuquer/alepe-legis-scraper\n" + RESET)
 
-    only_start = input("📌  Deseja pesquisar apenas este mês? (aperte Enter para não, qualquer tecla para sim): ")
+    print(TITLE + "📅 DEFINA O PERÍODO DE PESQUISA\n" + RESET)
 
+    start_month, start_year, default = get_previous_month_date()
     end_month, end_year = None, None
-    if only_start:
-        end_month = get_month_input("➡️  Digite o Mês de fim (1-12): ")
-        end_year = get_year_input("➡️  Digite o Ano de fim (ex: 2026): ")
 
-    print("\n🔎  Iniciando pesquisa...\n")
+    if not default:
+        only_start = input(WARN + "📌  Deseja pesquisar apenas este mês? (aperte Enter para sim, qualquer tecla para não): " + RESET)
+        
+        if only_start:
+            end_month, end_year, _ = get_previous_month_date()
+
+    print(RESET, end="")
 
     driver = create_driver()
 
     try:
         start_time = time.time()
-        t = start_time
 
-        print("🔎 Configurando parâmetros de pesquisa...")
+        print(INFO, end="")
         setup_search(driver, start_month, start_year, end_month, end_year)
+        print(RESET, end="")
         
         total_pages = configure_page_size(driver)
-        print(f"✅ Parâmetros de pesquisa configurados em {time.time() - t:.2f}s\n")
 
-        t = time.time()
-        print(f"📄 Coletando decretos de {total_pages} página(s)...")
         decrees = scrape_all_pages(driver, total_pages)
-        print(f"✅ Coleta de decretos concluída em {time.time() - t:.2f}s\n")
 
         result = filter_programs(decrees)
-        print(f"📊 Total de decretos encontrados: {len(decrees)}")
-        print(f"💼 Total de decretos PRODEPE/PROIND: {len(result)}\n")
 
-        t = time.time()
-        print("🔍 Extraindo CNPJs das empresas associadas aos decretos...")
+        print(INFO + f"\n📊 Total de decretos encontrados: {len(decrees)}")
+        print(f"💼 Total de decretos PRODEPE/PROIND: {len(result)}" + RESET)
+        
+        not_find = filter_not_find(decrees)
+
+        if not_find:
+            print(ERROR + "\n" + "!" * 65)
+            print("⚠️  ATENÇÃO — DECRETOS NÃO ENCONTRADOS")
+            print("!" * 65)
+
+            for start, end in not_find:
+                if start == end:
+                    print(f"❌ NÃO FOI ENCONTRADO O DECRETO: {start}")
+                else:
+                    print(f"❌ NÃO FORAM ENCONTRADOS DECRETOS NO INTERVALO: {start} ATÉ {end}")
+
+            print("!" * 65 + "\n" + RESET)
+
         result = populate_cnpjs_parallel(result)
-        print(f"✅ Extração de CNPJs concluída em {time.time() - t:.2f}s\n")
 
-        t = time.time()
         sort_decrees(result)
 
         os.makedirs("./output", exist_ok=True)
-        print("💾 Salvando resultados nos formatos JSON, XLSX e CSV...")
-        save_to_excel(result, "./output/programas.xlsx")
-        save_to_json(result, "./output/programas.json")
-        save_to_csv(result, "./output/programas.csv")
-        print(f"✅ Gravação concluída em {time.time() - t:.2f}s\n")
+        print(INFO + "\n💾 Salvando resultados nos formatos JSON, XLSX e CSV na pasta ./output" + RESET)
+        save_to_excel(result, "./output/decretos.xlsx")
+        save_to_json(result, "./output/decretos.json")
+        save_to_csv(result, "./output/decretos.csv")
 
-        print(f"⏱️ Tempo total de execução: {time.time() - start_time:.2f}s")
-        print("🎉 Processo finalizado com sucesso!")
+        print(SUCCESS + "GRAVAÇÃO CONCLUIDA" + RESET)
+
+        elapsed = time.time() - start_time
+        mins, secs = divmod(int(elapsed), 60)
+        print(INFO + f"\n⏱️  TEMPO TOTAL DE EXECUÇÃO: {mins:02}:{secs:02}" + RESET)
+        print(SUCCESS + "🎉 PROCESSO FINALIZADO COM SUCESSO!" + RESET)
 
     finally:
         driver.quit()
-        input("Pressione ENTER para encerrar o programa")
+        input(WARN + "\nPressione ENTER para encerrar o programa" + RESET)
 
 if __name__ == "__main__":
-    import multiprocessing
-    multiprocessing.freeze_support()
-    multiprocessing.set_start_method("spawn")
-
     import sys
     import io
 

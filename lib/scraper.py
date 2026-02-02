@@ -4,9 +4,10 @@ from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-import calendar, math, time
+import calendar, math
 from .models import Decree
 from .utils import extract_decree_number, wait_table_loaded, is_page_active, find_page_link, is_first_page_group
+import re
 
 BASE_URL = "https://legis.alepe.pe.gov.br/"
 SEARCH_URL = BASE_URL + "pesquisaAvancada.aspx"
@@ -16,24 +17,24 @@ WAIT_TIME = 15
 
 def setup_search(driver, s_m = 1, s_y = 2026, e_m = None, e_y = None):
     """Open ALEPE search page, select Decreto, set date range, and click search."""
-    driver.get(SEARCH_URL)
-    driver.find_element(By.ID, "cblTipoNorma_3").click()
-    driver.find_element(By.ID, "li-publicacao").click()
-
     if e_m == None:
         e_m, e_y = s_m, s_y
 
     last_day = calendar.monthrange(e_y, e_m)[1]
 
+    start_date = f"01/{s_m:02}/{s_y}"
+    end_date = f"{last_day:02}/{e_m:02}/{e_y}"
+
+    print(f"\n🔎 Buscando decretos no intervalo de: {start_date} até {end_date}\n", flush=True)
+
+    driver.get(SEARCH_URL)
+    driver.find_element(By.ID, "cblTipoNorma_3").click()
+    driver.find_element(By.ID, "li-publicacao").click()
+
     start_input = WebDriverWait(driver, WAIT_TIME).until(
         EC.presence_of_element_located((By.ID, "tbxDataInicialPublicacao"))
     )
     end_input = driver.find_element(By.ID, "tbxDataFinalPublicacao")
-
-    start_date = f"01/{s_m:02}/{s_y}"
-    end_date = f"{last_day:02}/{e_m:02}/{e_y}"
-
-    print(f"🔎 Buscando decretos no intervalo de:\n   {start_date} até {end_date}")
 
     start_input.clear()
     start_input.send_keys(start_date)
@@ -42,7 +43,6 @@ def setup_search(driver, s_m = 1, s_y = 2026, e_m = None, e_y = None):
     end_input.send_keys(end_date)
 
     driver.find_element(By.ID, "btnPesquisar").click()
-    print("⚡ Pesquisa iniciada... aguardando resultados.")
 
 def configure_page_size(driver):
     qty_label = WebDriverWait(driver, WAIT_TIME).until(
@@ -57,8 +57,9 @@ def configure_page_size(driver):
         select.select_by_value(str(PAGE_SIZE))
         wait_table_loaded(driver, WAIT_TIME)
 
-    print(f"📊 Decretos encontrados: {total_results}, Páginas a percorrer: {total_pages}")
     return total_pages
+
+RE_ID = re.compile(r'\d+')
 
 def extract_page_data(driver, buffer):
     """Extract all decrees on current page."""
@@ -74,14 +75,13 @@ def extract_page_data(driver, buffer):
         link = BASE_URL + name_anchor["href"]
         publish_date = publish_span.get_text(strip=True)[-10:]
         summary = summary_div.get_text(strip=True)
-        buffer.append(Decree(number, publish_date, link, summary))
+        match = RE_ID.search(name_anchor["href"])
+        id = int(match.group())
+        buffer.append(Decree(number, publish_date, link, summary, id))
 
 def scrape_all_pages(driver, total_pages):
     all_data = []
     current_page = 0
-    start_time_total = time.time()
-
-    print("⏳ Iniciando coleta de decretos...")
 
     page_iter = tqdm(
         range(1, total_pages + 1),
@@ -118,5 +118,4 @@ def scrape_all_pages(driver, total_pages):
             break
 
     page_iter.close()
-    print(f"✅ Coleta de decretos concluída em {time.time() - start_time_total:.2f}s")
     return all_data

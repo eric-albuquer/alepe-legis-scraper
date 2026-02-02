@@ -5,6 +5,15 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 import pandas as pd
 from datetime import date
+from dateutil.relativedelta import relativedelta
+from colorama import Fore, Style
+
+SUCCESS = Fore.GREEN + Style.BRIGHT
+INFO = Fore.CYAN + Style.BRIGHT
+WARN = Fore.YELLOW + Style.BRIGHT
+ERROR = Fore.RED + Style.BRIGHT
+TITLE = Fore.MAGENTA + Style.BRIGHT
+RESET = Style.RESET_ALL
 
 NUMBER_REGEX = re.compile(r"\d[\d\.]*")
 
@@ -50,7 +59,6 @@ def save_to_json(decrees, filename="decrees.json"):
     data = [d.to_dict() for d in decrees]
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
-    print(f"Arquivo JSON salvo em {filename}")
 
 def save_to_excel(data, filename):
     """
@@ -58,9 +66,8 @@ def save_to_excel(data, filename):
     Cada linha terá: número, data de publicação, programa, CNPJ e empresa.
     """
     rows = [d.to_row() for d in data]
-    df = pd.DataFrame(rows, columns=["Número", "Data Publicação", "Programa", "Tipo", "ConcOrig", "CNPJ", "Empresa", "Link", "Ementa"])
+    df = pd.DataFrame(rows, columns=["Número", "Data Publicação", "Programa", "Tipo", "ConcOrig", "CNPJ", "Empresa", "Link", "ID", "Ementa"])
     df.to_excel(filename, index=False)
-    print(f"Arquivo EXCEL salvo em {filename}")
 
 def save_to_csv(data, filename="decrees.csv"):
     """
@@ -68,21 +75,56 @@ def save_to_csv(data, filename="decrees.csv"):
     Cada linha terá: número, data de publicação, programa, CNPJ e empresa.
     """
     rows = [d.to_row() for d in data]
-    df = pd.DataFrame(rows, columns=["Número", "Data Publicação", "Programa", "Tipo", "ConcOrig", "CNPJ", "Empresa", "Link", "Ementa"])
+    df = pd.DataFrame(rows, columns=["Número", "Data Publicação", "Programa", "Tipo", "ConcOrig", "CNPJ", "Empresa", "Link", "ID", "Ementa"])
     df.to_csv(filename, index=False, encoding="utf-8-sig")
-    print(f"Arquivo CSV salvo em {filename}")
 
-def get_year_input(prompt="Ano: "):
-    """Solicita ao usuário um ano válido. Suporta anos com 2 ou 4 dígitos."""
+from datetime import date
+
+def get_previous_month_date():
+    """
+    Solicita ao usuário mês e ano. 
+    Se não digitar nada em ambos, retorna o mês anterior e ano correto.
+    Retorna: (month, year)
+    """
+    today = date.today()
+
+    # Calcula mês e ano do mês anterior automaticamente
+    if today.month == 1:
+        default_month = 12
+        default_year = today.year - 1
+    else:
+        default_month = today.month - 1
+        default_year = today.year
+
+    default = False
+
+    # ---------------- MÊS ----------------
     while True:
+        user_input = input(INFO + f"➡️  Digite o MÊS (ENTER = {default_month:02}/{default_year:04}): " + RESET).strip()
+        if not user_input:
+            return default_month, default_year, True
         try:
-            year = int(input(prompt))
+            month = int(user_input)
         except ValueError:
-            print("Entrada inválida! Digite um número para o ano.")
+            print(ERROR + "Entrada inválida! Digite um número de 1 a 12." + RESET)
+            continue
+
+        if 1 <= month <= 12:
+            break
+        print(WARN + "Mês inválido! Deve ser entre 1 e 12." + RESET)
+
+    # ---------------- ANO ----------------
+    while True:
+        user_input = input(INFO + f"➡️  Digite o ANO: " + RESET).strip()
+
+        try:
+            year = int(user_input)
+        except ValueError:
+            print(ERROR + "Entrada inválida! Digite um número para o ano." + RESET)
             continue
 
         if year <= 0:
-            print("Ano inválido! Deve ser maior que zero.")
+            print(WARN + "Ano inválido! Deve ser maior que zero." + RESET)
             continue
 
         # Converte anos com 2 dígitos para 4 dígitos
@@ -93,18 +135,6 @@ def get_year_input(prompt="Ano: "):
             else:
                 year += 1900
 
-        return year
+        break
 
-def get_month_input(prompt="Mês: "):
-    """Solicita ao usuário um mês válido (1 a 12)."""
-    while True:
-        try:
-            month = int(input(prompt))
-        except ValueError:
-            print("Entrada inválida! Digite um número de 1 a 12.")
-            continue
-
-        if 1 <= month <= 12:
-            return month
-
-        print("Mês inválido! Deve ser entre 1 e 12.")
+    return month, year, False

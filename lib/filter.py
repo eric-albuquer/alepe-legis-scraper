@@ -7,6 +7,19 @@ RE_EMPRESA = re.compile(r"empresa\s+(.+)", re.IGNORECASE)
 RE_CONTRIBUINTE = re.compile(r"contribuinte\s+(.+)", re.IGNORECASE)
 RE_ORIGINAL = re.compile(r"\d{2,3}\.\d{3}")
 
+def filter_not_find(decrees):
+    decrees = sorted(decrees, key=lambda x: x.number)
+    missing = []
+
+    last_number = decrees[0].number
+    for d in decrees:
+        delta = d.number - last_number
+        if delta > 1:
+            missing.append((last_number + 1, d.number - 1))
+
+        last_number = d.number
+    return missing
+
 def filter_programs(decrees):
     """Filter decrees for PRODEPE or PROIND programs."""
     filtered = []
