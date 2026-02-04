@@ -5,8 +5,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 import pandas as pd
 from datetime import date
-from dateutil.relativedelta import relativedelta
 from colorama import Fore, Style
+
+BASE_URL = "https://legis.alepe.pe.gov.br/"
 
 SUCCESS = Fore.GREEN + Style.BRIGHT
 INFO = Fore.CYAN + Style.BRIGHT
@@ -66,7 +67,7 @@ def save_to_excel(data, filename):
     Cada linha terá: número, data de publicação, programa, CNPJ e empresa.
     """
     rows = [d.to_row() for d in data]
-    df = pd.DataFrame(rows, columns=["Número", "Data Publicação", "Programa", "Tipo", "ConcOrig", "CNPJ", "Empresa", "Link", "ID", "Ementa"])
+    df = pd.DataFrame(rows, columns=["Número", "Data Publicação", "Programa", "Tipo", "Enquadramento", "ConcOrig", "CNPJ", "Empresa", "Link", "ID", "Ementa"])
     df.to_excel(filename, index=False)
 
 def save_to_csv(data, filename="decrees.csv"):
@@ -75,7 +76,7 @@ def save_to_csv(data, filename="decrees.csv"):
     Cada linha terá: número, data de publicação, programa, CNPJ e empresa.
     """
     rows = [d.to_row() for d in data]
-    df = pd.DataFrame(rows, columns=["Número", "Data Publicação", "Programa", "Tipo", "ConcOrig", "CNPJ", "Empresa", "Link", "ID", "Ementa"])
+    df = pd.DataFrame(rows, columns=["Número", "Data Publicação", "Programa", "Tipo", "Enquadramento", "ConcOrig", "CNPJ", "Empresa", "Link", "ID", "Ementa"])
     df.to_csv(filename, index=False, encoding="utf-8-sig")
 
 from datetime import date

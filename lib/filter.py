@@ -57,6 +57,7 @@ def filter_programs(decrees):
 
         elif "PROIND" in summary:
             decree.program = "PROIND"
+            decree.framing = "I"
 
             match = RE_CONTRIBUINTE.search(summary)
             if match:

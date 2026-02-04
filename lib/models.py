@@ -14,13 +14,11 @@ class Decree:
         self.type = None
         self.origin_decree = None
         self.id = id
-
-    def __str__(self):
-        return f"{self.number},{self.publish_date},{self.program}"
+        self.framing = None
 
     def to_row(self):
-        origin_decree_text = ";".join(map(str, self.origin_decree))
-        return [self.number, self.publish_date, self.program, self.type, origin_decree_text, self.cnpj, self.company, self.link, self.id, self.summary]
+        origin_decree_text = ";".join(map(str, self.origin_decree)) if isinstance(self.origin_decree, list) else None
+        return [self.number, self.publish_date, self.program, self.type, self.framing, origin_decree_text, self.cnpj, self.company, self.link, self.id, self.summary]
 
     def to_dict(self):
         """Return a dict representation for JSON."""
@@ -29,10 +27,11 @@ class Decree:
             "publish_date": self.publish_date,
             "program": self.program,
             "type": self.type,
+            "framing": self.framing,
             "origin_decree": self.origin_decree,
             "cnpj": self.cnpj,
             "company": self.company,
             "link": self.link,
             "id": self.id,
-            "summary": self.summary
+            "summary": self.summary,
         }

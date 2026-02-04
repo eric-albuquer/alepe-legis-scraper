@@ -6,10 +6,9 @@ from bs4 import BeautifulSoup
 from tqdm import tqdm
 import calendar, math
 from .models import Decree
-from .utils import extract_decree_number, wait_table_loaded, is_page_active, find_page_link, is_first_page_group
+from .utils import extract_decree_number, wait_table_loaded, is_page_active, find_page_link, is_first_page_group, BASE_URL
 import re
 
-BASE_URL = "https://legis.alepe.pe.gov.br/"
 SEARCH_URL = BASE_URL + "pesquisaAvancada.aspx"
 
 PAGE_SIZE = 200
@@ -63,7 +62,7 @@ RE_ID = re.compile(r'\d+')
 
 def extract_page_data(driver, buffer):
     """Extract all decrees on current page."""
-    soup = BeautifulSoup(driver.page_source, "html.parser")
+    soup = BeautifulSoup(driver.page_source, "lxml")
     rows = soup.select("#secResultado tbody tr")
     for row in rows:
         name_anchor = row.select_one("span.nome-norma > a")
