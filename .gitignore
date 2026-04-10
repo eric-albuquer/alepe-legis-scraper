@@ -4,3 +4,5 @@ venv/
 main.exe
 dec-alepe.exe
 alepe.ico
+main.spec
+build/

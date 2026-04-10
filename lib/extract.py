@@ -46,7 +46,7 @@ IMPORTADOR_REGEX = re.compile(
 
 LINK_REGEX = re.compile(r"/\?de\d+")
 
-def extract_link(link, search_framing = True):
+def extract_link(link, search_cnpj = True, search_framing = True):
     r = session.get(link, timeout=(5, 30))
     r.raise_for_status()
 
@@ -55,10 +55,10 @@ def extract_link(link, search_framing = True):
     cnpj = None
     framing = None
 
-    # Extrai CNPJ
-    match_cnpj = CNPJ_REGEX.search(text)
-    if match_cnpj:
-        cnpj = match_cnpj.group()
+    if search_cnpj:
+        match_cnpj = CNPJ_REGEX.search(text)
+        if match_cnpj:
+            cnpj = match_cnpj.group()
 
     if search_framing:
         if INDUSTRIAL_REGEX.search(text):
@@ -75,14 +75,14 @@ def extract_link(link, search_framing = True):
 def extract_cnpj(decree):
     search_framing = decree.program == "PRODEPE" and decree.type == "C"
     try:
-        cnpj, framing, text = extract_link(decree.link, search_framing)
+        cnpj, framing, text = extract_link(decree.link, True, search_framing)
         decree.cnpj = cnpj
 
         if not framing:
             match = LINK_REGEX.search(text)
             if match:
                 link = BASE_URL + match.group()
-                _, framing, _ = extract_link(link, True)
+                _, framing, _ = extract_link(link, False, True)
 
         decree.framing = framing
 

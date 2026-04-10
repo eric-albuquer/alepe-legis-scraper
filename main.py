@@ -37,9 +37,7 @@ def create_driver():
 
     chrome_options.page_load_strategy = "eager"
 
-    service = Service(executable_path="chromedriver.exe")
-
-    driver = webdriver.Chrome(options=chrome_options, service=service)
+    driver = webdriver.Chrome(options=chrome_options)
 
     driver.implicitly_wait(0)
 
